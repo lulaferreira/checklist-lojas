@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Painel do Checklist Estrutural</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="eyebrow">Facilities · Administração</span>
+      <h1>Painel do Checklist Estrutural</h1>
+    </div>
+    <div class="row" id="userbar" hidden>
+      <span class="note" id="user-email"></span>
+      <button class="btn small" id="btn-atualizar">Atualizar</button>
+      <button class="btn small" id="btn-sair">Sair</button>
+    </div>
+  </header>
+
+  <div id="status"></div>
+
+  <!-- Login -->
+  <section id="v-login" class="panel narrow stack" hidden>
+    <div><h2>Entrar</h2><p class="lead">Acesso restrito aos administradores.</p></div>
+    <form id="f-login" class="stack" novalidate>
+      <label class="f">E-mail <input type="email" id="lg-email" autocomplete="username" required></label>
+      <label class="f">Senha <input type="password" id="lg-senha" autocomplete="current-password" required></label>
+      <div id="lg-err" class="alert bad" hidden></div>
+      <div class="row"><button class="btn primary" type="submit" id="lg-btn">Entrar</button>
+        <button class="linkbtn" type="button" id="lg-esqueci">Esqueci minha senha</button></div>
+    </form>
+  </section>
+
+  <!-- Nova senha (link do e-mail de recuperação) -->
+  <section id="v-senha" class="panel narrow stack" hidden>
+    <div><h2>Definir nova senha</h2><p class="lead">Escolha uma senha com pelo menos 8 caracteres.</p></div>
+    <form id="f-senha" class="stack" novalidate>
+      <label class="f">Nova senha <input type="password" id="ns-1" autocomplete="new-password"></label>
+      <label class="f">Repita a nova senha <input type="password" id="ns-2" autocomplete="new-password"></label>
+      <div id="ns-err" class="alert bad" hidden></div>
+      <div class="row"><button class="btn primary" type="submit">Salvar senha</button></div>
+    </form>
+  </section>
+
+  <section id="v-painel" hidden></section>
+</div>
+
+<script src="config.js"></script>
+<script src="assets/vendor/supabase-2.58.0.js"></script>
+<script src="assets/checklist.js"></script>
+<script src="assets/admin.js"></script>
+</body>
+</html>

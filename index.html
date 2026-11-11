@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Checklist Estrutural das Lojas</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="eyebrow">Facilities · Vistoria estrutural</span>
+      <h1>Checklist Estrutural das Lojas</h1>
+    </div>
+  </header>
+
+  <div id="status"></div>
+
+  <!-- Etapa 1: identificação -->
+  <section id="v-ident" class="panel narrow stack">
+    <div>
+      <span class="eyebrow">Etapa 1 de 2</span>
+      <h2 style="margin-top:6px">Identificação</h2>
+      <p class="lead">Informe seu nome e selecione a loja vistoriada. Depois disso as perguntas são liberadas.</p>
+    </div>
+    <label class="f">Seu nome
+      <input type="text" id="in-nome" autocomplete="name" placeholder="Nome e sobrenome" maxlength="120">
+    </label>
+    <label class="f">Loja
+      <select id="in-loja"><option value="">Carregando lojas…</option></select>
+    </label>
+    <div id="ident-err" class="alert bad" hidden></div>
+    <div class="row"><button class="btn primary" id="btn-iniciar">Iniciar checklist</button></div>
+  </section>
+
+  <!-- Etapa 2: perguntas -->
+  <section id="v-form" hidden>
+    <div class="prog">
+      <div class="prog-top">
+        <span><b id="pg-loja"></b> <span class="muted">· <span id="pg-nome"></span></span></span>
+        <span><span id="pg-count" class="mono"></span> <button class="btn small" id="btn-trocar" style="margin-left:6px">Trocar loja</button></span>
+      </div>
+      <div class="bar"><i id="pg-bar"></i></div>
+    </div>
+    <p class="note" style="margin:6px 0 0">Responda todas as perguntas. Quando o item estiver com problema, descreva o que viu, marque a urgência e, se puder, anexe foto e o número do chamado.</p>
+    <div id="cats"></div>
+    <div class="submitbar">
+      <div id="form-err" class="alert bad" hidden></div>
+      <button class="btn primary" id="btn-enviar">Enviar checklist</button>
+      <span class="note">Seu rascunho fica salvo neste aparelho até o envio.</span>
+    </div>
+  </section>
+
+  <!-- Confirmação -->
+  <section id="v-done" class="panel stack" hidden>
+    <span class="eyebrow">Recebido</span>
+    <h2 id="done-t">Checklist enviado</h2>
+    <p class="muted" id="done-s" style="margin:0"></p>
+    <div class="row"><button class="btn primary" id="btn-outra">Vistoriar outra loja</button></div>
+  </section>
+</div>
+
+<script src="config.js"></script>
+<script src="assets/vendor/supabase-2.58.0.js"></script>
+<script src="assets/checklist.js"></script>
+<script src="assets/form.js"></script>
+</body>
+</html>
