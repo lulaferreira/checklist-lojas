@@ -7,11 +7,12 @@ const BK = "documentos";
 const STC = [["vigente","Contrato vigente"],["pendente_renovacao","Pendente renovação"],["renovacao_andamento","Renovação em andamento"],["encerrado","Encerrado"]];
 const STC_L = Object.fromEntries(STC);
 const INDICES = ["IGP-M","IPCA","INPC","IVAR","Outro"];
+const ORIGENS = ["Repasse CB","Repasse Franqueado","Loja Nova"];
 const UFS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 const D = { lojas:[], garantias:[], prazos:[], contratos:[], aditivos:[], minutas:[], fotoUrl:{} };
 const UI = {
   tab:"contratos", busca:"", fSt:"", fReg:"", fVenc:"", cad:"lojas", buscaLoja:"",
-  rel:{reg:"",uf:"",cidade:"",st:"",gar:"",prazo:"",ind:"",fach:"",logo:"",de:"",ate:"",enc:false},
+  rel:{reg:"",uf:"",cidade:"",st:"",gar:"",prazo:"",ind:"",fach:"",logo:"",orig:"",de:"",ate:"",enc:false},
   pie:{dim:"status",met:"qtd"}, bar:{dim:"regional",met:"custo"}, charts:{}, minuta:null, loading:false
 };
 
@@ -350,7 +351,7 @@ function abrirDetalhe(id, aba="dados"){
   const dd = (t,v) => `<div><dt>${t}</dt><dd>${v==null||v===""?"—":v}</dd></div>`;
   const dados = `
     <div class="fsec"><h3>Loja</h3><dl class="dl">
-      ${dd("Loja",esc(c.loja))}${dd("Regional",esc(l.regional))}${dd("Endereço",esc(enderecoLoja(l)))}
+      ${dd("Loja",esc(c.loja))}${dd("Cód. Help!",esc(l.codigo_help))}${dd("CNPJ da loja",esc(l.cnpj))}${dd("Origem",esc(l.origem))}${dd("Data de abertura",fmtD(l.data_abertura))}${dd("Regional",esc(l.regional))}${dd("Endereço",esc(enderecoLoja(l)))}
       ${dd("Nova fachada",simNao(l.nova_fachada))}${dd("Logo interna",simNao(l.logo_interna))}</dl></div>
     <div class="fsec"><h3>Contrato</h3><dl class="dl">
       ${dd("Tempo de contrato",esc(p?.nome))}${dd("Vigência",`${fmtD(c.data_inicio)} a ${fmtD(c.data_fim)}`)}${dd("Situação",`<span class="pill ${s.cls}">${s.t}</span>`)}
@@ -457,9 +458,9 @@ function cadLojas(){
     <div class="kpi"><span class="eyebrow">Cadastro incompleto</span><div class="v" style="color:${semEnd?"var(--warn)":"var(--ink)"}">${semEnd}</div><span class="s">lojas sem endereço</span></div>
   </div>
   <div class="panel"><div class="toolbar">
-    <input type="search" id="lj-busca" placeholder="Buscar loja, cidade ou regional" value="${esc(UI.buscaLoja)}" aria-label="Buscar loja">
+    <input type="search" id="lj-busca" placeholder="Buscar loja, cidade, regional, código ou CNPJ" value="${esc(UI.buscaLoja)}" aria-label="Buscar loja">
     <button class="btn primary" id="lj-nova" style="margin-left:auto">Nova loja</button></div>
-    <div class="scroll"><table><thead><tr><th>Foto</th><th>Loja</th><th>Cidade/UF</th><th>Regional</th><th>Nova fachada</th><th>Logo interna</th><th>Foto atualizada</th><th class="num">Contratos</th></tr></thead><tbody id="lj-tbody"></tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Foto</th><th>Loja</th><th>Cidade/UF</th><th>Regional</th><th>Origem</th><th>Nova fachada</th><th>Logo interna</th><th>Foto atualizada</th><th class="num">Contratos</th></tr></thead><tbody id="lj-tbody"></tbody></table></div>
   </div>`;
   $("#lj-busca").oninput = e=>{ UI.buscaLoja = e.target.value; tabelaLojas(); };
   $("#lj-nova").onclick = ()=>formLoja(null);
@@ -467,14 +468,14 @@ function cadLojas(){
 }
 function tabelaLojas(){
   const q = UI.buscaLoja.trim().toLowerCase();
-  const L = D.lojas.filter(l=>!q || `${l.nome} ${l.cidade||""} ${l.regional||""} ${l.bairro||""}`.toLowerCase().includes(q));
+  const L = D.lojas.filter(l=>!q || `${l.nome} ${l.cidade||""} ${l.regional||""} ${l.bairro||""} ${l.codigo_help||""} ${l.cnpj||""}`.toLowerCase().includes(q));
   $("#lj-tbody").innerHTML = L.map(l=>`<tr class="click" data-nome="${esc(l.nome)}">
     <td>${l.foto_path && D.fotoUrl[l.foto_path] ? `<img class="thumb" src="${esc(D.fotoUrl[l.foto_path])}" alt="" loading="lazy">` : `<div class="thumb"></div>`}</td>
-    <td><b>${esc(l.nome)}</b>${l.ativa?"":' <span class="pill neutral">inativa</span>'}<div class="note">${esc([l.logradouro,l.numero].filter(Boolean).join(", "))}</div></td>
-    <td>${esc([l.cidade,l.uf].filter(Boolean).join("/")||"—")}</td><td>${esc(l.regional||"—")}</td>
+    <td><b>${esc(l.nome)}</b>${l.ativa?"":' <span class="pill neutral">inativa</span>'}<div class="note">${esc([l.codigo_help && "Cód. "+l.codigo_help, [l.logradouro,l.numero].filter(Boolean).join(", ")].filter(Boolean).join(" · "))}</div></td>
+    <td>${esc([l.cidade,l.uf].filter(Boolean).join("/")||"—")}</td><td>${esc(l.regional||"—")}</td><td>${esc(l.origem||"—")}${l.data_abertura?`<div class="note">aberta em ${fmtD(l.data_abertura)}</div>`:""}</td>
     <td>${simNao(l.nova_fachada)}</td><td>${simNao(l.logo_interna)}</td>
     <td>${l.foto_data?fmtD(l.foto_data):'<span class="muted">sem foto</span>'}</td>
-    <td class="num">${D.contratos.filter(c=>c.loja===l.nome).length}</td></tr>`).join("") || `<tr><td colspan="8" class="muted">Nenhuma loja encontrada.</td></tr>`;
+    <td class="num">${D.contratos.filter(c=>c.loja===l.nome).length}</td></tr>`).join("") || `<tr><td colspan="9" class="muted">Nenhuma loja encontrada.</td></tr>`;
   $("#lj-tbody").querySelectorAll("tr[data-nome]").forEach(tr=>tr.onclick = ()=>formLoja(tr.dataset.nome));
 }
 function formLoja(nome){
@@ -486,6 +487,10 @@ function formLoja(nome){
   <div class="dlg-b">
     <div class="fsec"><h3>Identificação</h3><div class="fgrid">
       ${fI("nome","Nome da loja *",l.nome,{cls:"w2",attrs:'maxlength="120"'})}
+      ${fI("codigo_help","Cód. Help!",l.codigo_help,{attrs:'maxlength="30"'})}
+      ${fI("cnpj","CNPJ",l.cnpj,{attrs:'inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00"'})}
+      ${fS("origem","Origem",[["","Selecione"],...ORIGENS.map(o=>[o,o])],l.origem)}
+      ${fI("data_abertura","Data de abertura",l.data_abertura,{type:"date"})}
       <label>Regional<input name="regional" list="dl-reg" value="${esc(l.regional||"")}" placeholder="Ex.: Nordeste"><datalist id="dl-reg">${regs.map(r=>`<option value="${esc(r)}">`).join("")}</datalist></label>
       <label>Ativa no checklist${radio("ativa", l.ativa)}</label>
     </div>${nova?"":`<p class="note" style="margin:6px 0 0">Se mudar o nome, ele é atualizado também nos checklists e contratos desta loja.</p>`}</div>
@@ -510,6 +515,8 @@ function formLoja(nome){
   <div class="dlg-f"><span class="note" id="lj-msg" role="status"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn primary" type="submit">Salvar loja</button></div>
   </form>`);
   const f = $("#f-lj");
+  f.cnpj.addEventListener("input", ()=>{ const d = f.cnpj.value.replace(/\D/g,"").slice(0,14);
+    f.cnpj.value = d.replace(/^(\d{2})(\d)/,"$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3").replace(/\.(\d{3})(\d)/,".$1/$2").replace(/(\d{4})(\d)/,"$1-$2"); });
   f.foto.onchange = ()=>{ $("#foto-lbl").textContent = f.foto.files[0] ? "Foto selecionada: " + f.foto.files[0].name : "Inserir foto"; };
   $("#btn-cep").onclick = async ()=>{
     const cep = f.cep.value.replace(/\D/g,""), m = $("#cep-msg");
@@ -526,9 +533,10 @@ function formLoja(nome){
     const msg = $("#lj-msg"), err = t=>{ msg.textContent = t; msg.style.color = "var(--bad)"; };
     const val = n => { const x = f.elements[n]; return x ? (x.value||"").trim() || null : null; };
     const radioVal = n => { const r = f.querySelector(`[name=${n}]:checked`); return r ? r.value==="true" : null; };
-    const row = { nome:val("nome"), regional:val("regional"), cep:val("cep"), logradouro:val("logradouro"), numero:val("numero"), complemento:val("complemento"),
+    const row = { nome:val("nome"), codigo_help:val("codigo_help"), cnpj:val("cnpj"), origem:val("origem"), data_abertura:val("data_abertura"), regional:val("regional"), cep:val("cep"), logradouro:val("logradouro"), numero:val("numero"), complemento:val("complemento"),
       bairro:val("bairro"), cidade:val("cidade"), uf:val("uf"), nova_fachada:radioVal("nova_fachada"), logo_interna:radioVal("logo_interna"), ativa:radioVal("ativa") ?? true };
     if (!row.nome || row.nome.length<2) return err("Informe o nome da loja.");
+    if (row.cnpj && row.cnpj.replace(/\D/g,"").length!==14) return err("O CNPJ precisa ter 14 números.");
     if (nova && D.lojas.some(x=>x.nome.toLowerCase()===row.nome.toLowerCase())) return err("Já existe uma loja com esse nome.");
     const btn = f.querySelector("[type=submit]"); btn.disabled = true; msg.style.color = ""; msg.textContent = "Salvando…";
     try{
@@ -599,7 +607,7 @@ function ligarEdicaoTabela(body, tabela, ler, valido){
    ===================================================================== */
 const TAGS_PADRAO = [
   ["LOJA","Nome da loja"],["LOJA_ENDERECO","Endereço completo da loja"],["LOJA_LOGRADOURO","Logradouro"],["LOJA_NUMERO","Número"],["LOJA_COMPLEMENTO","Complemento"],
-  ["LOJA_BAIRRO","Bairro"],["LOJA_CIDADE","Cidade"],["LOJA_UF","UF"],["LOJA_CEP","CEP"],
+  ["LOJA_BAIRRO","Bairro"],["LOJA_CIDADE","Cidade"],["LOJA_UF","UF"],["LOJA_CEP","CEP"],["LOJA_CNPJ","CNPJ da loja"],["LOJA_CODIGO_HELP","Cód. Help!"],["LOJA_ORIGEM","Origem da loja"],["LOJA_DATA_ABERTURA","Data de abertura"],
   ["LOCADOR_NOME","Nome / razão social"],["LOCADOR_TIPO","Pessoa física / jurídica"],["LOCADOR_DOCUMENTO","CPF / CNPJ"],["LOCADOR_RG","RG / IE"],["LOCADOR_REPRESENTANTE","Representante"],
   ["LOCADOR_EMAIL","E-mail"],["LOCADOR_TELEFONE","Telefone"],["LOCADOR_ENDERECO","Endereço do locador"],["LOCADOR_BANCO","Banco"],["LOCADOR_AGENCIA","Agência"],["LOCADOR_CONTA","Conta"],["LOCADOR_PIX","PIX"],
   ["PRAZO","Tempo de contrato"],["PRAZO_MESES","Meses"],["DATA_INICIO","Início"],["DATA_FIM","Fim"],
@@ -633,7 +641,7 @@ const moeda = v => v==null || v==="" ? "" : Number(v).toLocaleString("pt-BR",{mi
 function valoresPadrao(c, lojaNome){
   const l = lojaDe(c?.loja || lojaNome || ""), p = prazoDe(c?.prazo_id), g = garDe(c?.garantia_id), h = hojeISO();
   return { LOJA:l.nome||"", LOJA_ENDERECO:enderecoLoja(l), LOJA_LOGRADOURO:l.logradouro||"", LOJA_NUMERO:l.numero||"", LOJA_COMPLEMENTO:l.complemento||"",
-    LOJA_BAIRRO:l.bairro||"", LOJA_CIDADE:l.cidade||"", LOJA_UF:l.uf||"", LOJA_CEP:l.cep||"",
+    LOJA_BAIRRO:l.bairro||"", LOJA_CIDADE:l.cidade||"", LOJA_UF:l.uf||"", LOJA_CEP:l.cep||"", LOJA_CNPJ:l.cnpj||"", LOJA_CODIGO_HELP:l.codigo_help||"", LOJA_ORIGEM:l.origem||"", LOJA_DATA_ABERTURA:l.data_abertura?fmtD(l.data_abertura):"",
     LOCADOR_NOME:c?.locador_nome||"", LOCADOR_TIPO:c?.locador_tipo==="PF"?"pessoa física":c?.locador_tipo==="PJ"?"pessoa jurídica":"", LOCADOR_DOCUMENTO:c?.locador_documento||"",
     LOCADOR_RG:c?.locador_rg||"", LOCADOR_REPRESENTANTE:c?.locador_representante||"", LOCADOR_EMAIL:c?.locador_email||"", LOCADOR_TELEFONE:c?.locador_telefone||"",
     LOCADOR_ENDERECO:c?.locador_endereco||"", LOCADOR_BANCO:c?.locador_banco||"", LOCADOR_AGENCIA:c?.locador_agencia||"", LOCADOR_CONTA:c?.locador_conta||"", LOCADOR_PIX:c?.locador_pix||"",
@@ -744,13 +752,14 @@ function linhasRel(){
     return { c, loja:c.loja, regional:l.regional||"Sem regional", uf:l.uf||"Sem UF", cidade:l.cidade||"Sem cidade", status:c.status, statusL:STC_L[c.status]||c.status,
       garantia:garDe(c.garantia_id)?.nome||"Sem garantia", exigeValor:!!garDe(c.garantia_id)?.exige_valor, prazo:prazoDe(c.prazo_id)?.nome||"Sem prazo", indice:c.indice_reajuste||"Sem índice",
       fach:l.nova_fachada===true?"Nova fachada":l.nova_fachada===false?"Fachada antiga":"Fachada não informada",
+      origem:l.origem||"Origem não informada",
       logo:l.logo_interna===true?"Com logo interna":l.logo_interna===false?"Sem logo interna":"Logo não informada",
       faixa:faixaVenc(c), fim:c.data_fim||"", custo:custo(c), aluguel:Number(c.valor_locacao)||0 }; });
 }
 function filtrarRel(L){
   const f = UI.rel;
   return L.filter(r=>(f.enc || r.status!=="encerrado") && (!f.reg||r.regional===f.reg) && (!f.uf||r.uf===f.uf) && (!f.cidade||r.cidade===f.cidade) && (!f.st||r.status===f.st)
-    && (!f.gar||r.garantia===f.gar) && (!f.prazo||r.prazo===f.prazo) && (!f.ind||r.indice===f.ind) && (!f.fach||r.fach===f.fach) && (!f.logo||r.logo===f.logo)
+    && (!f.gar||r.garantia===f.gar) && (!f.prazo||r.prazo===f.prazo) && (!f.ind||r.indice===f.ind) && (!f.fach||r.fach===f.fach) && (!f.logo||r.logo===f.logo) && (!f.orig||r.origem===f.orig)
     && (!f.de || (r.fim && r.fim>=f.de)) && (!f.ate || (r.fim && r.fim<=f.ate)));
 }
 const FAIXAS = ["Vencido","Até 60 dias","61 dias a 6 meses","6 a 12 meses","Mais de 12 meses","Sem vencimento","Encerrado"];
@@ -759,7 +768,7 @@ const RDIMS = {
   faixa:{label:"Prazo para vencer", get:r=>r.faixa, ord:r=>FAIXAS.indexOf(r.faixa)},
   regional:{label:"Regional", get:r=>r.regional}, uf:{label:"UF", get:r=>r.uf}, cidade:{label:"Cidade", get:r=>r.cidade}, loja:{label:"Loja", get:r=>r.loja},
   garantia:{label:"Garantia", get:r=>r.garantia}, prazo:{label:"Tempo de contrato", get:r=>r.prazo}, indice:{label:"Índice de reajuste", get:r=>r.indice},
-  fach:{label:"Nova fachada", get:r=>r.fach}, logo:{label:"Logo interna", get:r=>r.logo},
+  fach:{label:"Nova fachada", get:r=>r.fach}, origem:{label:"Origem da loja", get:r=>r.origem}, logo:{label:"Logo interna", get:r=>r.logo},
   mes:{label:"Mês de vencimento", get:r=>r.fim ? r.fim.slice(5,7)+"/"+r.fim.slice(0,4) : "Sem vencimento", ord:r=>r.fim ? r.fim.slice(0,7) : "9999"}
 };
 const METS = [["qtd","Quantidade"],["custo","Custo mensal"],["aluguel","Aluguel"]];
@@ -780,7 +789,7 @@ function renderRelatorios(){
   <div class="panel" style="margin-bottom:16px"><div class="ctl-row">
     ${sel("rf-reg","Regional","reg",uniq("regional"))}${sel("rf-uf","UF","uf",uniq("uf"))}${sel("rf-cidade","Cidade","cidade",uniq("cidade"))}
     ${sel("rf-st","Status","st",STC)}${sel("rf-gar","Garantia","gar",uniq("garantia"))}${sel("rf-prazo","Tempo de contrato","prazo",uniq("prazo"))}
-    ${sel("rf-ind","Índice","ind",uniq("indice"))}${sel("rf-fach","Fachada","fach",["Nova fachada","Fachada antiga","Fachada não informada"])}${sel("rf-logo","Logo interna","logo",["Com logo interna","Sem logo interna","Logo não informada"])}
+    ${sel("rf-ind","Índice","ind",uniq("indice"))}${sel("rf-fach","Fachada","fach",["Nova fachada","Fachada antiga","Fachada não informada"])}${sel("rf-orig","Origem","orig",[...ORIGENS,"Origem não informada"])}${sel("rf-logo","Logo interna","logo",["Com logo interna","Sem logo interna","Logo não informada"])}
     <label>Vencimento de<input type="date" id="rf-de" value="${f.de}"></label><label>até<input type="date" id="rf-ate" value="${f.ate}"></label>
     <label style="flex-direction:row;align-items:center;gap:6px;align-self:flex-end;padding-bottom:8px"><input type="checkbox" id="rf-enc" ${f.enc?"checked":""} style="width:auto"> Incluir encerrados</label>
     <button class="btn small" id="rf-limpar" style="align-self:flex-end">Limpar filtros</button>
@@ -793,9 +802,9 @@ function renderRelatorios(){
     <div class="kpi"><span class="eyebrow">Caução depositada</span><div class="v">${brl(caucao)}</div><span class="s">garantias que pedem valor</span></div>
   </div>
   ${L.length ? `<div class="grid2">
-    <div class="panel"><div class="sec-h"><h3>Distribuição</h3><div class="ctl-row">${dimSel("pie-dim",UI.pie.dim,["status","faixa","regional","uf","garantia","prazo","indice","fach","logo"])}${seg("pie",UI.pie.met)}</div></div>
+    <div class="panel"><div class="sec-h"><h3>Distribuição</h3><div class="ctl-row">${dimSel("pie-dim",UI.pie.dim,["status","faixa","regional","uf","garantia","prazo","indice","fach","logo","origem"])}${seg("pie",UI.pie.met)}</div></div>
       <div class="chart-box"><canvas id="ch-pie" role="img" aria-label="Gráfico de pizza"></canvas></div><div class="legend" id="pie-legend"></div></div>
-    <div class="panel"><div class="sec-h"><h3>Comparativo</h3><div class="ctl-row">${dimSel("bar-dim",UI.bar.dim,["regional","uf","cidade","loja","garantia","status","faixa","indice","prazo","mes"])}${seg("bar",UI.bar.met)}</div></div>
+    <div class="panel"><div class="sec-h"><h3>Comparativo</h3><div class="ctl-row">${dimSel("bar-dim",UI.bar.dim,["regional","uf","cidade","loja","garantia","status","faixa","indice","prazo","origem","mes"])}${seg("bar",UI.bar.met)}</div></div>
       <div class="chart-box tall" id="bar-box"><canvas id="ch-bar" role="img" aria-label="Gráfico de barras"></canvas></div></div>
   </div>
   <div class="panel sec"><div class="sec-h"><h3>Contratos no filtro</h3></div>
@@ -805,10 +814,10 @@ function renderRelatorios(){
     <tr class="sum-row"><td colspan="6">Total</td><td class="num">${brl(totA)}</td><td class="num">${brl(L.reduce((t,r)=>t+(Number(r.c.valor_condominio)||0),0))}</td><td class="num">${brl(L.reduce((t,r)=>t+(Number(r.c.valor_iptu)||0),0))}</td><td class="num">${brl(L.reduce((t,r)=>t+(Number(r.c.outros_tributos)||0),0))}</td><td class="num">${brl(totM)}</td><td colspan="2"></td></tr>
     </tbody></table></div></div>` : `<div class="empty">${D.contratos.length ? "Nenhum contrato para estes filtros." : "Cadastre contratos para ver os relatórios."}</div>`}`;
   const bind = (id,key,ev="change") => { const x = $(id); if (x) x.addEventListener(ev, e=>{ UI.rel[key] = e.target.type==="checkbox" ? e.target.checked : e.target.value; renderRelatorios(); }); };
-  [["#rf-reg","reg"],["#rf-uf","uf"],["#rf-cidade","cidade"],["#rf-st","st"],["#rf-gar","gar"],["#rf-prazo","prazo"],["#rf-ind","ind"],["#rf-fach","fach"],["#rf-logo","logo"],["#rf-de","de"],["#rf-ate","ate"],["#rf-enc","enc"]].forEach(([i,k])=>bind(i,k));
-  $("#rf-limpar").onclick = ()=>{ UI.rel = {reg:"",uf:"",cidade:"",st:"",gar:"",prazo:"",ind:"",fach:"",logo:"",de:"",ate:"",enc:false}; renderRelatorios(); };
-  $("#rf-exp").onclick = ()=>baixarCSV("relatorio-contratos-locacao", [["Loja","Regional","Cidade","UF","Locador","CPF/CNPJ","Início","Vencimento","Situação","Status","Tempo de contrato","Garantia","Valor garantia","Aluguel","Condomínio","IPTU","Outros tributos","Total mensal","Índice","Próximo reajuste","Responsável","Nova fachada","Logo interna","Aditivos"]]
-    .concat(L.map(r=>[r.loja,r.regional,r.cidade,r.uf,r.c.locador_nome,r.c.locador_documento||"",fmtD(r.c.data_inicio),fmtD(r.fim),situacao(r.c).t,r.statusL,r.prazo,r.garantia,numCSV(r.c.valor_garantia),numCSV(r.c.valor_locacao),numCSV(r.c.valor_condominio),numCSV(r.c.valor_iptu),numCSV(r.c.outros_tributos),numCSV(r.custo),r.c.indice_reajuste||"",fmtD(r.c.proximo_reajuste),r.c.responsavel||"",r.fach,r.logo,D.aditivos.filter(a=>a.contrato_id===r.c.id).length])));
+  [["#rf-reg","reg"],["#rf-uf","uf"],["#rf-cidade","cidade"],["#rf-st","st"],["#rf-gar","gar"],["#rf-prazo","prazo"],["#rf-ind","ind"],["#rf-fach","fach"],["#rf-logo","logo"],["#rf-orig","orig"],["#rf-de","de"],["#rf-ate","ate"],["#rf-enc","enc"]].forEach(([i,k])=>bind(i,k));
+  $("#rf-limpar").onclick = ()=>{ UI.rel = {reg:"",uf:"",cidade:"",st:"",gar:"",prazo:"",ind:"",fach:"",logo:"",orig:"",de:"",ate:"",enc:false}; renderRelatorios(); };
+  $("#rf-exp").onclick = ()=>baixarCSV("relatorio-contratos-locacao", [["Loja","Cód. Help!","CNPJ da loja","Origem","Data de abertura","Regional","Cidade","UF","Locador","CPF/CNPJ","Início","Vencimento","Situação","Status","Tempo de contrato","Garantia","Valor garantia","Aluguel","Condomínio","IPTU","Outros tributos","Total mensal","Índice","Próximo reajuste","Responsável","Nova fachada","Logo interna","Aditivos"]]
+    .concat(L.map(r=>{ const lj = lojaDe(r.loja); return [r.loja,lj.codigo_help||"",lj.cnpj||"",lj.origem||"",fmtD(lj.data_abertura),r.regional,r.cidade,r.uf,r.c.locador_nome,r.c.locador_documento||"",fmtD(r.c.data_inicio),fmtD(r.fim),situacao(r.c).t,r.statusL,r.prazo,r.garantia,numCSV(r.c.valor_garantia),numCSV(r.c.valor_locacao),numCSV(r.c.valor_condominio),numCSV(r.c.valor_iptu),numCSV(r.c.outros_tributos),numCSV(r.custo),r.c.indice_reajuste||"",fmtD(r.c.proximo_reajuste),r.c.responsavel||"",r.fach,r.logo,D.aditivos.filter(a=>a.contrato_id===r.c.id).length]; })));
   el.querySelectorAll("tr[data-id]").forEach(tr=>tr.onclick = ()=>abrirDetalhe(tr.dataset.id));
   if (!L.length) return;
   $("#pie-dim").onchange = e=>{ UI.pie.dim = e.target.value; renderRelatorios(); };

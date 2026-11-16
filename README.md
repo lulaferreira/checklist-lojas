@@ -224,3 +224,22 @@ Todo dia às 8h, o sistema verifica os contratos que entraram na janela de 60 di
    2. Troque `TROQUE_PELO_CRON_SECRET` pelo mesmo valor do `CRON_SECRET`.
    3. Rode o script no **SQL Editor**.
    4. Para conferir, abra **Integrations → Cron** (ou **Database → Cron Jobs**). O job `alerta-vencimentos-diario` deve aparecer na lista.
+
+---
+
+## Atualização 04: novos campos no cadastro de lojas
+
+Campos novos na ficha da loja (aba **Cadastro → Lojas** em `contratos.html`):
+- **Cód. Help!** e **CNPJ**, preenchidos manualmente. O CNPJ ganha pontuação sozinho enquanto você digita.
+- **Origem**, com as opções Repasse CB, Repasse Franqueado e Loja Nova.
+- **Data de abertura**.
+
+Eles também aparecem:
+- **na lista de lojas:** origem e data de abertura; a busca encontra lojas pelo código ou pelo CNPJ;
+- **no detalhe do contrato;**
+- **nos Relatórios:** filtro e gráficos por origem, e as colunas na exportação;
+- **nas minutas:** `{LOJA_CNPJ}`, `{LOJA_CODIGO_HELP}`, `{LOJA_ORIGEM}` e `{LOJA_DATA_ABERTURA}`.
+
+**Instalar:**
+1. Rode `supabase/migracao-04-lojas-dados.sql` no SQL Editor do Supabase.
+2. Envie `assets/contratos.js` ao GitHub, na pasta `assets`.
