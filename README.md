@@ -157,3 +157,70 @@ supabase/functions/notificar-checklist/index.ts   e-mail de confirmação (opcio
 3. Clique em **Commit changes**, espere 1 a 2 minutos e recarregue o painel com **Ctrl+F5**.
 
 > Não envie o `config.js` de novo se o seu já estiver preenchido. Ele não mudou.
+
+---
+
+## Atualização 03: controle de contratos de locação (`contratos.html`)
+
+Página nova, com o mesmo login do painel do checklist. Os dois painéis têm um link um para o outro no topo.
+
+**Abas:**
+- **Contratos:**
+  - Painel com contratos vigentes e quantos vencem em até 6 meses, em até 12 meses e já venceram.
+  - Lista dos vencidos e dos que vencem nos próximos 60 dias.
+  - Lista completa, com busca e filtros.
+  - Botão **Novo contrato**: loja, tempo de contrato e garantia vêm do cadastro; o locador é preenchido na hora; também tem valor da garantia (caução), status, locação, condomínio, IPTU, outros tributos, reajuste, observação e PDF do contrato.
+  - Ao clicar num contrato, abrem as abas **Dados** e **Aditivo**. Ao registrar um aditivo (novo valor, novo prazo, nova data de vencimento e PDF), o contrato é atualizado e o histórico fica guardado.
+- **Cadastro:**
+  - **Lojas:** endereço campo a campo, com busca por CEP; regional; nova fachada e logo interna (Sim/Não); foto com data de inserção.
+  - **Garantias** e **Tempo de contrato:** editáveis.
+- **Minutas padrão:**
+  - Envie o seu modelo em Word (.docx) com os campos entre chaves, como `{LOCADOR_NOME}`.
+  - Escolha um contrato ou uma loja para preencher os campos automaticamente, edite o que quiser e gere a minuta pronta (.docx).
+  - Valor por extenso e data por extenso já saem prontos.
+- **Relatórios:**
+  - **Filtros:** regional, UF, cidade, status, garantia, prazo, índice, padrão visual e período de vencimento.
+  - **Totais:** custo mensal e anual, aluguel médio e caução.
+  - **Gráficos:** pizza e barras configuráveis.
+  - **Exportação:** CSV.
+
+### Como instalar
+
+1. **Banco:** no Supabase, abra **SQL Editor → New query**, cole `supabase/migracao-03-contratos.sql` e clique em **Run**. O script não apaga dados.
+2. **Site:** no GitHub, abra **Add file → Upload files** e envie o conteúdo da pasta da atualização, mantendo as pastas. Clique em **Commit changes**.
+3. Abra `https://SEU-USUARIO.github.io/checklist-lojas/contratos.html` e entre com o seu login.
+
+### Como preparar uma minuta padrão no Word
+
+Troque os dados variáveis do seu contrato por campos entre chaves, em maiúsculas e sem espaços. Exemplo:
+
+> LOCADOR: **{LOCADOR_NOME}**, inscrito no CPF/CNPJ sob nº {LOCADOR_DOCUMENTO}, … aluguel mensal de R$ {VALOR_LOCACAO} ({VALOR_LOCACAO_EXTENSO}) …
+
+**Campos preenchidos automaticamente:**
+- **Loja:** `{LOJA}`, `{LOJA_ENDERECO}`, `{LOJA_LOGRADOURO}`, `{LOJA_NUMERO}`, `{LOJA_COMPLEMENTO}`, `{LOJA_BAIRRO}`, `{LOJA_CIDADE}`, `{LOJA_UF}`, `{LOJA_CEP}`
+- **Locador:** `{LOCADOR_NOME}`, `{LOCADOR_TIPO}`, `{LOCADOR_DOCUMENTO}`, `{LOCADOR_RG}`, `{LOCADOR_REPRESENTANTE}`, `{LOCADOR_EMAIL}`, `{LOCADOR_TELEFONE}`, `{LOCADOR_ENDERECO}`, `{LOCADOR_BANCO}`, `{LOCADOR_AGENCIA}`, `{LOCADOR_CONTA}`, `{LOCADOR_PIX}`
+- **Contrato:** `{PRAZO}`, `{PRAZO_MESES}`, `{DATA_INICIO}`, `{DATA_FIM}`, `{VALOR_LOCACAO}`, `{VALOR_LOCACAO_EXTENSO}`, `{VALOR_CONDOMINIO}`, `{VALOR_IPTU}`, `{OUTROS_TRIBUTOS}`, `{GARANTIA}`, `{VALOR_GARANTIA}`, `{VALOR_GARANTIA_EXTENSO}`, `{INDICE_REAJUSTE}`, `{MULTA_RESCISORIA}`, `{DATA_HOJE}`, `{DATA_HOJE_EXTENSO}`
+
+Qualquer outro campo que você criar (ex.: `{TESTEMUNHA_1}`) aparece em branco para preencher na hora. O arquivo `exemplo-modelo-minuta.docx` mostra todos os campos em uso.
+
+### Alerta de vencimento por e-mail (60 dias antes)
+
+Todo dia às 8h, o sistema verifica os contratos que entraram na janela de 60 dias e envia **um e-mail** para Luiz e William com a lista. Cada contrato é avisado uma vez por data de vencimento; se um aditivo mudar o vencimento, ele volta a ser monitorado.
+
+1. **Resend:** siga os itens 1 a 3 da seção "Opcional: e-mail de confirmação" (conta, domínio verificado pela TI e chave da API).
+2. **Função:** no Supabase, abra **Edge Functions → Deploy a new function → Via Editor**. Use o nome `alerta-vencimentos`, cole `supabase/functions/alerta-vencimentos/index.ts`, **desative "Verify JWT"** e clique em **Deploy**.
+3. **Secrets**, em **Edge Functions → Secrets** (os já criados para o checklist valem para as duas funções):
+
+| Nome | Valor |
+|---|---|
+| `RESEND_API_KEY` | a chave do Resend |
+| `EMAIL_REMETENTE` | `Contratos Facilities <contratos@portalnova.com.br>` |
+| `EMAIL_DESTINO` | `luiz.ferreira@portalnova.com.br,william.rocha@portalnova.com.br` |
+| `CRON_SECRET` | um texto aleatório longo (ex.: gere uma senha de 30 caracteres) |
+| `CONTRATOS_URL` | o link da página `contratos.html` |
+
+4. **Agendamento:**
+   1. Abra `supabase/agendar-alerta-vencimentos.sql`.
+   2. Troque `TROQUE_PELO_CRON_SECRET` pelo mesmo valor do `CRON_SECRET`.
+   3. Rode o script no **SQL Editor**.
+   4. Para conferir, abra **Integrations → Cron** (ou **Database → Cron Jobs**). O job `alerta-vencimentos-diario` deve aparecer na lista.

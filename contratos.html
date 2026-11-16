@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Contratos de Locação</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap wide" id="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="eyebrow">Facilities · Locações</span>
+      <h1>Contratos de Locação</h1>
+    </div>
+    <div class="row" id="userbar" hidden>
+      <nav class="navlinks"><a href="admin.html">Checklist das lojas</a></nav>
+      <span class="note" id="user-email"></span>
+      <button class="btn small" id="btn-atualizar">Atualizar</button>
+      <button class="btn small" id="btn-sair">Sair</button>
+    </div>
+  </header>
+
+  <div id="status"></div>
+
+  <section id="v-login" class="panel narrow stack" hidden>
+    <div><h2>Entrar</h2><p class="lead">Acesso restrito aos administradores. Use o mesmo login do painel do checklist.</p></div>
+    <form id="f-login" class="stack" novalidate>
+      <label class="f">E-mail <input type="email" id="lg-email" autocomplete="username" required></label>
+      <label class="f">Senha <input type="password" id="lg-senha" autocomplete="current-password" required></label>
+      <div id="lg-err" class="alert bad" hidden></div>
+      <div class="row"><button class="btn primary" type="submit" id="lg-btn">Entrar</button>
+        <button class="linkbtn" type="button" id="lg-esqueci">Esqueci minha senha</button></div>
+    </form>
+  </section>
+
+  <section id="v-app" hidden>
+    <nav class="tabs" role="tablist" aria-label="Seções">
+      <button role="tab" data-tab="contratos" aria-selected="true">Contratos</button>
+      <button role="tab" data-tab="cadastro" aria-selected="false">Cadastro</button>
+      <button role="tab" data-tab="minutas" aria-selected="false">Minutas padrão</button>
+      <button role="tab" data-tab="relatorios" aria-selected="false">Relatórios</button>
+    </nav>
+    <div id="t-contratos"></div>
+    <div id="t-cadastro" hidden></div>
+    <div id="t-minutas" hidden></div>
+    <div id="t-relatorios" hidden></div>
+  </section>
+</div>
+
+<dialog class="dlg" id="dlg"></dialog>
+
+<script src="config.js"></script>
+<script src="assets/vendor/supabase-2.58.0.js"></script>
+<script src="assets/vendor/chart-4.4.4.umd.js"></script>
+<script src="assets/vendor/pizzip-3.1.7.min.js"></script>
+<script src="assets/vendor/docxtemplater-3.47.4.min.js"></script>
+<script src="assets/checklist.js"></script>
+<script src="assets/contratos.js"></script>
+</body>
+</html>
