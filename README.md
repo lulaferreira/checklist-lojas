@@ -128,3 +128,32 @@ assets/vendor/supabase-2.58.0.js   biblioteca do Supabase (local)
 supabase/schema.sql                banco, segurança, lojas e admins  ← rodar no SQL Editor
 supabase/functions/notificar-checklist/index.ts   e-mail de confirmação (opcional)
 ```
+
+---
+
+## Atualização 02: plano de ação com status, valores e relatório de gastos
+
+**O que mudou no painel (`admin.html`):**
+- **Abas:** Visão geral · Plano de ação · Gastos e relatórios.
+- **Plano de ação:** para cada item com problema, você define o **status** (Não iniciado, Agendado, Em andamento, Concluído), o **valor do serviço**, o **prestador** e a **data prevista**. Tudo é salvo automaticamente, com registro de quem alterou e quando. Ao marcar "Concluído", a data de conclusão é gravada sozinha.
+- **Conformidade atual:** cada ação concluída passa a contar como item conforme. A tabela "Conformidade por loja e área" e as notas das lojas sobem conforme os serviços são concluídos. A nota original da vistoria continua visível para comparação.
+- **Gastos e relatórios:**
+  - **Filtros:** loja, área, status, urgência e período (pela data da vistoria ou pela data de conclusão).
+  - **Totais:** valor total, gasto (concluído), em execução e a iniciar.
+  - **Gráfico de pizza:** agrupa por status, área, urgência, loja ou prestador.
+  - **Gráfico de barras:** agrupa por loja, área, status, urgência, prestador ou mês de conclusão.
+  - **Medida dos gráficos:** valor em R$ ou quantidade de ações.
+  - **Tabelas:** resumo por área e por loja.
+  - **Exportação:** relatório em CSV.
+
+**Como instalar a atualização (5 minutos):**
+1. No Supabase, abra **SQL Editor → New query**, cole o conteúdo de `supabase/migracao-02-plano-de-acao.sql` e clique em **Run**. O script não apaga nenhum dado.
+2. No GitHub, abra o repositório `checklist-lojas` → **Add file → Upload files** e envie estes arquivos, mantendo as pastas:
+   - `admin.html`
+   - `assets/admin.js`
+   - `assets/style.css`
+   - `assets/vendor/chart-4.4.4.umd.js` (novo)
+   - `supabase/schema.sql` e `supabase/migracao-02-plano-de-acao.sql` (só para manter o histórico)
+3. Clique em **Commit changes**, espere 1 a 2 minutos e recarregue o painel com **Ctrl+F5**.
+
+> Não envie o `config.js` de novo se o seu já estiver preenchido. Ele não mudou.

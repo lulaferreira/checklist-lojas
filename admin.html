@@ -48,11 +48,22 @@
     </form>
   </section>
 
-  <section id="v-painel" hidden></section>
+  <section id="v-painel" hidden>
+    <nav class="tabs" role="tablist" aria-label="Seções do painel">
+      <button role="tab" data-tab="geral" aria-selected="true">Visão geral</button>
+      <button role="tab" data-tab="plano" aria-selected="false">Plano de ação</button>
+      <button role="tab" data-tab="gastos" aria-selected="false">Gastos e relatórios</button>
+    </nav>
+    <p class="note" id="upd" style="margin:0 0 14px"></p>
+    <div id="t-geral"></div>
+    <div id="t-plano" hidden></div>
+    <div id="t-gastos" hidden></div>
+  </section>
 </div>
 
 <script src="config.js"></script>
 <script src="assets/vendor/supabase-2.58.0.js"></script>
+<script src="assets/vendor/chart-4.4.4.umd.js"></script>
 <script src="assets/checklist.js"></script>
 <script src="assets/admin.js"></script>
 </body>
